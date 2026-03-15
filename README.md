@@ -86,7 +86,7 @@ GitHub Actions workflow: `.github/workflows/release.yml`
   - Builds Windows, macOS, Linux artifacts in Actions
 - Push tag `v*` (example `v1.0.0`):
   - Builds artifacts
-  - Creates a draft GitHub Release and uploads assets
+  - Creates/updates a draft GitHub Release and uploads assets automatically
 
 Assets generated:
 
