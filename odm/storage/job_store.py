@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Any
+
+from PyQt6.QtCore import QStandardPaths
 
 
 INTERRUPTED_STATUSES = {"Starting", "Downloading", "Finalizing"}
@@ -86,5 +89,11 @@ class JobStore:
 
 
 def default_job_db_path() -> Path:
+    if getattr(sys, "frozen", False):
+        app_data = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation).strip()
+        if app_data:
+            return Path(app_data) / "internal" / "downloads.db"
+        return Path.home() / ".adm" / "internal" / "downloads.db"
+
     root = Path(__file__).resolve().parents[1]
     return root / "internal" / "downloads.db"
