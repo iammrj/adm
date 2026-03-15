@@ -1,7 +1,8 @@
+from pathlib import Path
 import sys
 
 from PyQt6.QtCore import QSettings
-from PyQt6.QtGui import QFontDatabase
+from PyQt6.QtGui import QFontDatabase, QIcon
 from PyQt6.QtWidgets import QApplication
 
 from odm.core import ensure_ssl_certificates
@@ -64,6 +65,10 @@ def main() -> None:
     app = QApplication(sys.argv)
     app.setOrganizationName("ADM")
     app.setApplicationName("Apex Download Manager")
+
+    icon_path = Path(__file__).resolve().parent / "assets" / "icons" / "adm.png"
+    if icon_path.exists():
+        app.setWindowIcon(QIcon(str(icon_path)))
 
     theme_name, font_family, font_size = read_appearance_settings(app)
     apply_app_appearance(

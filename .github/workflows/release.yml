@@ -63,19 +63,19 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller
+          pip install -r requirements.txt pyinstaller pillow
 
       - name: Build Windows executable
         if: runner.os == 'Windows'
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" main.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png main.py
 
       - name: Build macOS application bundle
         if: runner.os == 'macOS'
-        run: pyinstaller --noconfirm --clean --windowed --name "${{ env.APP_NAME }}" main.py
+        run: pyinstaller --noconfirm --clean --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png main.py
 
       - name: Build Linux executable
         if: runner.os == 'Linux'
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" main.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png main.py
 
       - name: Package Windows artifacts
         if: runner.os == 'Windows'

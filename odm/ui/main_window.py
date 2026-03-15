@@ -16,6 +16,9 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QPushButton,
     QScrollArea,
+    QDialog,
+    QDialogButtonBox,
+    QLabel,
     QStyle,
     QVBoxLayout,
     QWidget,
@@ -31,6 +34,11 @@ from odm.workers import DownloadWorkerThread
 
 
 class MainWindow(QMainWindow):
+    APP_VERSION = "1.0.0"
+    DEVELOPER_NAME = "MRJ"
+    PROFILE_URL = "https://github.com/iammrj"
+    REPO_URL = "https://github.com/iammrj/adm"
+
     NAV_ITEMS = (
         "All Downloads",
         "Music",
@@ -299,6 +307,61 @@ class MainWindow(QMainWindow):
         reset_font_action = QAction("Reset Font Size", self)
         reset_font_action.triggered.connect(self._reset_font_size)
         appearance_menu.addAction(reset_font_action)
+
+        help_menu = menu_bar.addMenu("Help")
+        about_action = QAction("About ADM", self)
+        about_action.triggered.connect(self._show_about_dialog)
+        help_menu.addAction(about_action)
+
+    def _show_about_dialog(self) -> None:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("About ADM")
+        dialog.setModal(True)
+        dialog.setMinimumWidth(460)
+
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(16, 14, 16, 14)
+        layout.setSpacing(10)
+
+        icon_label = QLabel()
+        app_icon = QApplication.windowIcon()
+        if not app_icon.isNull():
+            icon_label.setPixmap(app_icon.pixmap(56, 56))
+            layout.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignHCenter)
+
+        title = QLabel("<b>Apex Download Manager (ADM)</b>")
+        title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(title)
+
+        version = QLabel(f"Version {self.APP_VERSION}")
+        version.setObjectName("MetaLabel")
+        version.setAlignment(Qt.AlignmentFlag.AlignHCenter)
+        layout.addWidget(version)
+
+        details = QLabel(
+            f"Developer: {self.DEVELOPER_NAME}<br>"
+            f"Profile: <a href='{self.PROFILE_URL}'>{self.PROFILE_URL}</a><br>"
+            f"Repository: <a href='{self.REPO_URL}'>{self.REPO_URL}</a>"
+        )
+        details.setWordWrap(True)
+        details.setTextFormat(Qt.TextFormat.RichText)
+        details.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        details.setOpenExternalLinks(True)
+        layout.addWidget(details)
+
+        note = QLabel(
+            "Fast segmented downloads, queue recovery, and multi-format analysis "
+            "for direct links and streaming sources."
+        )
+        note.setObjectName("MetaLabel")
+        note.setWordWrap(True)
+        layout.addWidget(note)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(dialog.accept)
+        layout.addWidget(buttons)
+
+        dialog.exec()
 
     def _build_ui(self) -> None:
         app_container = QWidget()
