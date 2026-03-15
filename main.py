@@ -23,6 +23,11 @@ MIN_FONT_SIZE = 10
 MAX_FONT_SIZE = 18
 
 
+def resource_path(*parts: str) -> Path:
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    return base.joinpath(*parts)
+
+
 def resolve_default_font_family() -> str:
     available = set(QFontDatabase.families())
     for family in PREFERRED_FONT_FAMILIES:
@@ -66,7 +71,7 @@ def main() -> None:
     app.setOrganizationName("ADM")
     app.setApplicationName("Apex Download Manager")
 
-    icon_path = Path(__file__).resolve().parent / "assets" / "icons" / "adm.png"
+    icon_path = resource_path("assets", "icons", "adm.png")
     if icon_path.exists():
         app.setWindowIcon(QIcon(str(icon_path)))
 

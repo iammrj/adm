@@ -67,15 +67,15 @@ jobs:
 
       - name: Build Windows executable
         if: runner.os == 'Windows'
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png main.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png --add-data "odm/theme;odm/theme" --add-data "assets/icons;assets/icons" main.py
 
       - name: Build macOS application bundle
         if: runner.os == 'macOS'
-        run: pyinstaller --noconfirm --clean --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png main.py
+        run: pyinstaller --noconfirm --clean --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png --add-data "odm/theme:odm/theme" --add-data "assets/icons:assets/icons" main.py
 
       - name: Build Linux executable
         if: runner.os == 'Linux'
-        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png main.py
+        run: pyinstaller --noconfirm --clean --onefile --windowed --name "${{ env.APP_NAME }}" --icon assets/icons/adm.png --add-data "odm/theme:odm/theme" --add-data "assets/icons:assets/icons" main.py
 
       - name: Package Windows artifacts
         if: runner.os == 'Windows'

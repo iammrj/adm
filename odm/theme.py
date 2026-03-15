@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
 
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QApplication
@@ -23,8 +24,22 @@ def load_theme_qss(theme_name: str, base_dir: Path | None = None) -> str:
     normalized = theme_name.lower().strip()
     file_name = THEME_FILES.get(normalized, THEME_FILES["dark"])
 
-    theme_dir = (base_dir or Path(__file__).resolve().parent) / "theme"
-    return load_qss(theme_dir / file_name)
+    candidates: list[Path] = []
+    candidates.append((base_dir or Path(__file__).resolve().parent) / "theme")
+
+    # PyInstaller onefile/onedir runtime extraction path.
+    meipass = getattr(sys, "_MEIPASS", "")
+    if meipass:
+        candidates.append(Path(meipass) / "odm" / "theme")
+
+    # Fallback near executable for custom packaging layouts.
+    candidates.append(Path(sys.executable).resolve().parent / "odm" / "theme")
+
+    for theme_dir in candidates:
+        qss_path = theme_dir / file_name
+        if qss_path.exists():
+            return load_qss(qss_path)
+    return ""
 
 
 def compose_runtime_qss(base_qss: str, font_size: int) -> str:

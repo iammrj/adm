@@ -73,7 +73,7 @@ python main.py
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm --clean --onefile --windowed --name ADM main.py
+pyinstaller --noconfirm --clean --onefile --windowed --name ADM --icon assets/icons/adm.png --add-data "odm/theme:odm/theme" --add-data "assets/icons:assets/icons" main.py
 ```
 
 Output binary/app bundle is generated under `dist/`.
