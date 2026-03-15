@@ -1,0 +1,3 @@
+PyQt6>=6.6
+yt-dlp
+certifi

@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+
+# Tooling / IDE
+.idea/
+.DS_Store
+
+# Build and release outputs
+build/
+dist/
+*.spec
+release-artifacts/
+artifacts/
+
+# Local runtime data
+odm/internal/*.db
+odm/internal/*.sqlite
+odm/internal/*.sqlite3
+
+# Logs
+*.log
