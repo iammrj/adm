@@ -35,7 +35,7 @@ from odm.workers import DownloadWorkerThread
 
 class MainWindow(QMainWindow):
     APP_VERSION = "1.0.0"
-    DEVELOPER_NAME = "MRJ"
+    DEVELOPER_NAME = "Jilani Shaik"
     PROFILE_URL = "https://github.com/iammrj"
     REPO_URL = "https://github.com/iammrj/adm"
 
@@ -315,9 +315,11 @@ class MainWindow(QMainWindow):
 
     def _show_about_dialog(self) -> None:
         dialog = QDialog(self)
+        dialog.setObjectName("AboutDialog")
         dialog.setWindowTitle("About ADM")
         dialog.setModal(True)
         dialog.setMinimumWidth(460)
+        dialog.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
 
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(16, 14, 16, 14)
@@ -330,6 +332,7 @@ class MainWindow(QMainWindow):
             layout.addWidget(icon_label, 0, Qt.AlignmentFlag.AlignHCenter)
 
         title = QLabel("<b>Apex Download Manager (ADM)</b>")
+        title.setObjectName("AboutTitle")
         title.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         layout.addWidget(title)
 
@@ -343,6 +346,7 @@ class MainWindow(QMainWindow):
             f"Profile: <a href='{self.PROFILE_URL}'>{self.PROFILE_URL}</a><br>"
             f"Repository: <a href='{self.REPO_URL}'>{self.REPO_URL}</a>"
         )
+        details.setObjectName("AboutDetails")
         details.setWordWrap(True)
         details.setTextFormat(Qt.TextFormat.RichText)
         details.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)

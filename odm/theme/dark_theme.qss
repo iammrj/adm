@@ -263,6 +263,25 @@ QDialog#DownloadDialog {
     background-color: #0f172a;
 }
 
+QDialog#AboutDialog {
+    background-color: #0f172a;
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+}
+
+QLabel#AboutTitle {
+    color: #f8fafc;
+}
+
+QLabel#AboutDetails {
+    color: #cbd5e1;
+}
+
+QLabel#AboutDetails a {
+    color: #93c5fd;
+    text-decoration: none;
+}
+
 QDialog#DownloadDialog QGroupBox {
     margin-top: 12px;
     padding-top: 12px;
