@@ -34,7 +34,7 @@ from odm.workers import DownloadWorkerThread
 
 
 class MainWindow(QMainWindow):
-    APP_VERSION = "1.0.0"
+    APP_VERSION = "1.0.2"
     DEVELOPER_NAME = "Jilani Shaik"
     PROFILE_URL = "https://github.com/iammrj"
     REPO_URL = "https://github.com/iammrj/adm"
@@ -354,8 +354,8 @@ class MainWindow(QMainWindow):
         layout.addWidget(details)
 
         note = QLabel(
-            "Fast segmented downloads, queue recovery, and multi-format analysis "
-            "for direct links and streaming sources."
+            "What's new in 1.0.2: yt-dlp runtime compatibility fixes, bundled ffmpeg fallback, "
+            "and high-resolution audio merge improvements."
         )
         note.setObjectName("MetaLabel")
         note.setWordWrap(True)
