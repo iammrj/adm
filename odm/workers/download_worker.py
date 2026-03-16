@@ -148,8 +148,18 @@ class DownloadWorkerThread(QThread):
             }
 
             format_id = self.job.get("format_id")
+            stream_type = str(self.job.get("stream_type") or "")
             if format_id:
-                options["format"] = str(format_id)
+                format_id_text = str(format_id)
+                if stream_type == "Video":
+                    # Video-only formats need explicit audio pairing.
+                    options["format"] = f"{format_id_text}+bestaudio/best"
+                    options["merge_output_format"] = "mp4"
+                else:
+                    options["format"] = format_id_text
+            else:
+                options["format"] = "bestvideo*+bestaudio/best"
+                options["merge_output_format"] = "mp4"
 
             headers = self.job.get("headers")
             if isinstance(headers, dict) and headers:

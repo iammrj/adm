@@ -53,6 +53,7 @@ class FetchFormatsThread(QThread):
             formats.sort(
                 key=lambda fmt: (
                     fmt.get("vcodec") != "none",
+                    fmt.get("acodec") != "none",
                     fmt.get("height") or 0,
                     fmt.get("tbr") or 0,
                 ),
