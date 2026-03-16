@@ -421,6 +421,7 @@ class NewTaskDialog(QDialog):
                 if isinstance(selected_option, dict)
                 else str(result.get("size_label") or "unknown"),
                 "stream_type": selected_option.get("stream_type") if isinstance(selected_option, dict) else result.get("stream_type"),
+                "height": selected_option.get("height") if isinstance(selected_option, dict) else None,
             }
             self._download_drafts.append(draft)
 

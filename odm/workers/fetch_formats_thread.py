@@ -5,6 +5,7 @@ from typing import Any
 from PyQt6.QtCore import QThread, pyqtSignal
 
 from odm.core import ensure_ssl_certificates, is_certificate_verify_error
+from odm.workers.ytdlp_runtime import QuietYtdlpLogger, js_runtime_config
 
 
 class FetchFormatsThread(QThread):
@@ -26,7 +27,11 @@ class FetchFormatsThread(QThread):
                 "no_warnings": True,
                 "noplaylist": True,
                 "skip_download": True,
+                "logger": QuietYtdlpLogger(),
             }
+            runtimes = js_runtime_config()
+            if runtimes:
+                options["js_runtimes"] = runtimes
 
             def extract(ydl_options: dict[str, Any]) -> dict[str, Any]:
                 with yt_dlp.YoutubeDL(ydl_options) as ydl:

@@ -13,6 +13,7 @@ from odm.core import (
     stream_type,
     title_from_url,
 )
+from odm.workers.ytdlp_runtime import QuietYtdlpLogger, js_runtime_config
 
 
 class AnalyzeUrlsThread(QThread):
@@ -37,7 +38,11 @@ class AnalyzeUrlsThread(QThread):
                 "no_warnings": True,
                 "noplaylist": True,
                 "skip_download": True,
+                "logger": QuietYtdlpLogger(),
             }
+            runtimes = js_runtime_config()
+            if runtimes:
+                base_options["js_runtimes"] = runtimes
 
             def extract_with_options(url: str, *, insecure: bool) -> dict[str, Any]:
                 options = dict(base_options)
@@ -113,6 +118,12 @@ class AnalyzeUrlsThread(QThread):
 
                         option_stream_type = stream_type(fmt)
                         option_size = format_stream_size(fmt, duration_seconds)
+                        height_value = fmt.get("height")
+                        option_height: int | None
+                        try:
+                            option_height = int(height_value) if height_value is not None else None
+                        except (TypeError, ValueError):
+                            option_height = None
                         option_label = (
                             f"{resolution_label(fmt)} | {str(fmt.get('ext', 'n/a')).upper()} | "
                             f"{option_stream_type} | {option_size}"
@@ -124,6 +135,7 @@ class AnalyzeUrlsThread(QThread):
                                 "size_label": option_size,
                                 "stream_type": option_stream_type,
                                 "stream_label": stream_label(fmt),
+                                "height": option_height,
                             }
                         )
 

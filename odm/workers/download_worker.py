@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,12 @@ from odm.core import (
     format_speed,
     is_certificate_verify_error,
 )
+from odm.workers.ytdlp_runtime import (
+    QuietYtdlpLogger,
+    has_media_merger,
+    js_runtime_config,
+    resolve_ffmpeg_executable,
+)
 
 
 class DownloadWorkerThread(QThread):
@@ -31,6 +38,24 @@ class DownloadWorkerThread(QThread):
 
     def request_cancel(self) -> None:
         self.cancel_requested = True
+
+    @staticmethod
+    def _best_muxed_selector(max_height: int | None) -> str:
+        if max_height is not None and max_height > 0:
+            return f"best[height<={max_height}][acodec!=none]/best[acodec!=none]/best"
+        return "best[acodec!=none]/best"
+
+    @staticmethod
+    def _merge_warning_detected(messages: list[str]) -> bool:
+        warning_text = " ".join(message.lower() for message in messages)
+        snippets = (
+            "ffmpeg not found",
+            "won't be merged",
+            "cannot merge",
+            "merging of formats failed",
+            "postprocessing:",
+        )
+        return any(snippet in warning_text for snippet in snippets)
 
     def run(self) -> None:
         mode = str(self.job.get("mode") or "segmented")
@@ -92,6 +117,7 @@ class DownloadWorkerThread(QThread):
             output_template = str(output_dir / "%(title)s.%(ext)s")
             timeout_seconds = int(self.job.get("timeout_seconds") or 30)
             final_path: str | None = None
+            warning_messages: list[str] = []
 
             def progress_hook(payload: dict[str, Any]) -> None:
                 nonlocal final_path
@@ -135,6 +161,15 @@ class DownloadWorkerThread(QThread):
                         },
                     )
 
+            def postprocessor_hook(payload: dict[str, Any]) -> None:
+                nonlocal final_path
+                info = payload.get("info_dict")
+                if not isinstance(info, dict):
+                    return
+                filepath = str(info.get("filepath") or info.get("_filename") or "").strip()
+                if filepath:
+                    final_path = filepath
+
             options: dict[str, Any] = {
                 "quiet": True,
                 "no_warnings": True,
@@ -142,24 +177,67 @@ class DownloadWorkerThread(QThread):
                 "continuedl": True,
                 "retries": 5,
                 "progress_hooks": [progress_hook],
+                "postprocessor_hooks": [postprocessor_hook],
                 "outtmpl": output_template,
                 "socket_timeout": timeout_seconds,
                 "concurrent_fragment_downloads": max(1, int(self.job.get("segment_count") or 4)),
+                "logger": QuietYtdlpLogger(warning_handler=warning_messages.append),
             }
+            runtimes = js_runtime_config()
+            if runtimes:
+                options["js_runtimes"] = runtimes
+            ffmpeg_executable = resolve_ffmpeg_executable()
+            if ffmpeg_executable:
+                options["ffmpeg_location"] = ffmpeg_executable
 
             format_id = self.job.get("format_id")
             stream_type = str(self.job.get("stream_type") or "")
+            ffmpeg_available = has_media_merger()
+            raw_height = self.job.get("height")
+            selected_height: int | None
+            try:
+                selected_height = int(raw_height) if raw_height is not None else None
+            except (TypeError, ValueError):
+                selected_height = None
+            fallback_selector = self._best_muxed_selector(selected_height)
+            expect_merge = False
             if format_id:
                 format_id_text = str(format_id)
                 if stream_type == "Video":
-                    # Video-only formats need explicit audio pairing.
-                    options["format"] = f"{format_id_text}+bestaudio/best"
-                    options["merge_output_format"] = "mp4"
-                else:
+                    if ffmpeg_available:
+                        # Video-only formats need explicit audio pairing.
+                        options["format"] = (
+                            f"{format_id_text}+bestaudio[ext=m4a]/"
+                            f"{format_id_text}+bestaudio/"
+                            f"{fallback_selector}"
+                        )
+                        options["merge_output_format"] = "mp4"
+                        expect_merge = True
+                    else:
+                        # Keep audio when merge tools are unavailable in packaged builds.
+                        options["format"] = fallback_selector
+                elif stream_type in {"Audio", "Muxed"}:
                     options["format"] = format_id_text
+                else:
+                    # Backward compatibility for older queued jobs without stream_type metadata.
+                    if ffmpeg_available:
+                        options["format"] = (
+                            f"{format_id_text}+bestaudio[ext=m4a]/"
+                            f"{format_id_text}+bestaudio/"
+                            f"{format_id_text}/"
+                            f"{fallback_selector}"
+                        )
+                        options["merge_output_format"] = "mp4"
+                        expect_merge = True
+                    else:
+                        options["format"] = f"{format_id_text}/{fallback_selector}"
             else:
-                options["format"] = "bestvideo*+bestaudio/best"
-                options["merge_output_format"] = "mp4"
+                if ffmpeg_available:
+                    options["format"] = "bestvideo*+bestaudio[ext=m4a]/bestvideo*+bestaudio/best"
+                    options["merge_output_format"] = "mp4"
+                    expect_merge = True
+                else:
+                    options["format"] = self._best_muxed_selector(None)
 
             headers = self.job.get("headers")
             if isinstance(headers, dict) and headers:
@@ -183,6 +261,18 @@ class DownloadWorkerThread(QThread):
 
             if exit_code:
                 raise RuntimeError(f"yt-dlp exited with status {exit_code}.")
+
+            likely_unmerged_partial = bool(final_path and re.search(r"\.f\d+\.", final_path))
+            if expect_merge and (self._merge_warning_detected(warning_messages) or likely_unmerged_partial):
+                retry_options = dict(options)
+                retry_options["format"] = fallback_selector
+                retry_options.pop("merge_output_format", None)
+                retry_options["noprogress"] = True
+                retry_options["logger"] = QuietYtdlpLogger()
+
+                retry_exit_code = execute_download(retry_options)
+                if retry_exit_code:
+                    raise RuntimeError(f"yt-dlp fallback retry failed with status {retry_exit_code}.")
 
             self.succeeded.emit(job_id, final_path or str(output_dir))
         except Exception as exc:

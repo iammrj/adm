@@ -537,6 +537,12 @@ class MainWindow(QMainWindow):
 
         size_label = str(draft.get("size_label") or "unknown")
         headers = draft.get("headers") if isinstance(draft.get("headers"), dict) else None
+        raw_height = draft.get("height")
+        selected_height: int | None
+        try:
+            selected_height = int(raw_height) if raw_height is not None else None
+        except (TypeError, ValueError):
+            selected_height = None
 
         return {
             "id": self._next_job_id(),
@@ -548,6 +554,8 @@ class MainWindow(QMainWindow):
             "mode": mode,
             "headers": headers,
             "format_id": format_id,
+            "stream_type": stream_type_value,
+            "height": selected_height,
             "size_label": size_label,
             "segment_count": self.segment_connections,
             "timeout_seconds": self.timeout_seconds,

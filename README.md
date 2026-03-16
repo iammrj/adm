@@ -49,6 +49,7 @@ Note: Internal package/module path remains `odm/` for now, while product brandin
 - PyQt6
 - yt-dlp
 - certifi
+- imageio-ffmpeg (bundled ffmpeg runtime fallback)
 - SQLite (built-in via Python `sqlite3`)
 
 ## Run Locally
@@ -73,7 +74,7 @@ python main.py
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm --clean --onefile --windowed --name ADM --icon assets/icons/adm.png --add-data "odm/theme:odm/theme" --add-data "assets/icons:assets/icons" main.py
+pyinstaller --noconfirm --clean --onefile --windowed --name ADM --icon assets/icons/adm.png --collect-all imageio_ffmpeg --add-data "odm/theme:odm/theme" --add-data "assets/icons:assets/icons" main.py
 ```
 
 Output binary/app bundle is generated under `dist/`.
